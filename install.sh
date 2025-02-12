@@ -2,7 +2,7 @@
 
 # Create necessary directories
 mkdir -p ~/.local/bin
-mkdir -p ~/.local/lib/ai-cli
+mkdir -p ~/.local/lib/ai-cli/functions
 
 # Copy files to their locations
 cp command_generator.py ~/.local/lib/ai-cli/
@@ -17,11 +17,34 @@ if [ ! -d ~/.local/lib/ai-cli/venv ]; then
     ./venv/bin/pip install -r requirements.txt
 fi
 
-# Create the ai command script
-cat > ~/.local/bin/ai << 'EOL'
-#!/bin/bash
+# Create the ai function file for Zsh (name must match function name)
+cat > ~/.local/lib/ai-cli/functions/ai << 'EOL'
+# Get the directory where the AI CLI is installed
+AI_DIR="$HOME/.local/lib/ai-cli"
 
-ai() {
+if [ $# -eq 0 ]; then
+    echo "Usage: ai 'your natural language command description'"
+    echo "Example: ai 'install python requirements'"
+    return 1
+fi
+
+# Generate the command
+cd "$AI_DIR"  # Change to AI directory to ensure .env is found
+generated_cmd=$("$AI_DIR/venv/bin/python" "$AI_DIR/command_generator.py" "$@")
+cd - > /dev/null  # Return to previous directory
+
+if [ $? -ne 0 ]; then
+    return 1
+fi
+
+# Use Zsh's print -z to put the command in the buffer
+print -z "$generated_cmd"
+EOL
+
+# Create the ai command script for Bash
+cat > ~/.local/lib/ai-cli/ai.bash << 'EOL'
+# Define the function without displaying it
+function ai {
     # Get the directory where the AI CLI is installed
     AI_DIR="$HOME/.local/lib/ai-cli"
     
@@ -40,33 +63,41 @@ ai() {
         return 1
     fi
 
-    # Detect shell type and use appropriate method
-    if [ -n "$ZSH_VERSION" ]; then
-        # For Zsh
-        print -z "$generated_cmd"
-    else
-        # For Bash
-        history -s "$generated_cmd"
-        bind '"\e[A": history-search-backward'
-        echo "Press Up Arrow to get the command"
-    fi
+    # For Bash
+    history -s "$generated_cmd"
+    bind '"\e[A": history-search-backward'
+    echo "Press Up Arrow to get the command"
 }
-
-# Export the function so it can be used in subshells
-export -f ai
 EOL
 
-# Make the script executable
-chmod +x ~/.local/bin/ai
-
-# Add to shell config if not already there
+# Remove old configuration
 for config in ~/.zshrc ~/.bashrc; do
     if [ -f "$config" ]; then
-        if ! grep -q "source ~/.local/bin/ai" "$config"; then
-            echo -e "\n# AI CLI\nsource ~/.local/bin/ai" >> "$config"
-        fi
+        sed -i.bak '/^# AI CLI$/d' "$config"
+        sed -i.bak '/^source ~\/.local\/bin\/ai/d' "$config"
+        sed -i.bak '/^source.*ai\.zsh/d' "$config"
+        sed -i.bak '/^source.*ai\.bash/d' "$config"
+        sed -i.bak '/^fpath=.*ai-cli/d' "$config"
+        sed -i.bak '/^autoload.*ai/d' "$config"
+        rm -f "${config}.bak"
     fi
 done
 
+# Add new configuration
+if [ -f ~/.zshrc ]; then
+    echo $'\n# AI CLI\nfpath=(~/.local/lib/ai-cli/functions $fpath)\nautoload -Uz ai' >> ~/.zshrc
+fi
+
+if [ -f ~/.bashrc ]; then
+    echo $'\n# AI CLI\nsource ~/.local/lib/ai-cli/ai.bash' >> ~/.bashrc
+fi
+
+# Make the Zsh function file executable
+chmod +x ~/.local/lib/ai-cli/functions/ai
+
 echo "Installation complete! Please restart your terminal or run:"
-echo "source ~/.local/bin/ai" 
+if [ -n "$ZSH_VERSION" ]; then
+    echo "fpath=(~/.local/lib/ai-cli/functions \$fpath) && autoload -Uz ai"
+else
+    echo "source ~/.local/lib/ai-cli/ai.bash"
+fi 
