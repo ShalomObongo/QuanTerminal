@@ -77,7 +77,7 @@ def generate_command(prompt: str, directory: str = ".") -> str:
     
     try:
         response = client.chat.completions.create(
-            model="mixtral-8x7b-32768",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Convert this to a terminal command: {prompt}"}
