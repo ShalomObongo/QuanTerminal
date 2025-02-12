@@ -26,11 +26,12 @@
 
 ## 🌟 Overview
 
-QuanTerminal revolutionizes command-line interaction by bridging the gap between natural human language and terminal commands. Powered by Groq's cutting-edge Mixtral-8x7b model, it transforms simple English descriptions into precise terminal commands.
+QuanTerminal revolutionizes command-line interaction by bridging the gap between natural human language and terminal commands. Powered by Groq's cutting-edge Llama3.3 70B model, it transforms simple English descriptions into precise terminal commands, with intelligent context awareness of your current environment.
 
 ### ✨ Why QuanTerminal?
 
 - 🗣️ **Natural Language First**: Describe what you want in plain English
+- 🧠 **Context-Aware**: Automatically adapts to your project environment
 - ⚡ **Zero Latency**: Instant command generation
 - 🛡️ **Safe by Design**: Built-in command validation
 - 🔄 **Interactive**: Edit commands before execution
@@ -44,6 +45,22 @@ QuanTerminal revolutionizes command-line interaction by bridging the gap between
 - 🌍 Global command availability
 - 🛡️ Intelligent safety checks
 - ⚡ Zero-latency suggestions
+
+### 🧠 Smart Context Detection
+- 📂 **Project Type Recognition**
+  - Automatically detects Node.js, Python, Docker, Rust, Go projects
+  - Suggests appropriate package managers and tools
+  - Adapts commands to project structure
+
+- 🔄 **Git-Aware Commands**
+  - Understands repository status
+  - Tracks modified, staged, and untracked files
+  - Optimizes Git commands based on current state
+
+- 🐚 **Shell Environment Integration**
+  - Considers current shell type (Bash/Zsh)
+  - Aware of environment variables
+  - Respects shell aliases and configurations
 
 ### 💫 User Experience
 - 🔌 Seamless shell integration
@@ -83,26 +100,26 @@ QuanTerminal revolutionizes command-line interaction by bridging the gap between
 ai "your command description"
 ```
 
-### 🌟 Example Use Cases
+### 🌟 Context-Aware Examples
 
-| Category | Example Command |
-|----------|----------------|
-| 📂 Files | "find all PDFs modified this week" |
-| 🔄 Git | "commit changes with bug fix message" |
-| 🌐 Network | "check if port 8080 is in use" |
-| 📦 Packages | "install latest nodejs" |
-| 💻 System | "show running processes" |
+| Context | Command | Result |
+|---------|---------|--------|
+| Node.js Project | `ai "install dependencies"` | `npm install` |
+| Python Project | `ai "install dependencies"` | `pip install -r requirements.txt` |
+| Git (with changes) | `ai "commit all changes"` | `git add . && git commit -m "..."` |
+| Docker Project | `ai "build container"` | `docker build -t project-name .` |
+| Any Directory | `ai "find large files"` | `find . -type f -size +100M` |
 
 ## 🔧 Technical Architecture
 
 ### 🏗️ Command Pipeline
-1. 🧠 **NLP Processing**
-   - Input sanitization
-   - Context analysis
-   - Intent recognition
+1. 🧠 **Context Analysis**
+   - Project type detection
+   - Git status analysis
+   - Shell environment inspection
 
 2. ⚙️ **Command Synthesis**
-   - Validation checks
+   - Context-aware generation
    - Parameter optimization
    - Shell compatibility
 
@@ -123,20 +140,24 @@ ai "your command description"
 - 🚀 Minimal dependencies
 - ⚡ Efficient integration
 - 💾 Smart resource management
+- 🧠 Context caching
 
 ## 🔄 Future Roadmap
 
 1. 📚 **Command Learning**
    - History analysis
    - Preference learning
+   - Context pattern recognition
 
 2. 🔌 **Enhanced Integration**
-   - More shell support
+   - More project type support
+   - Additional shell compatibility
    - Plugin system
 
 3. 🎯 **Advanced Features**
    - Command explanations
    - Interactive tutorials
+   - Custom context rules
 
 ## 🤝 Contributing
 

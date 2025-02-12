@@ -5,7 +5,7 @@ mkdir -p ~/.local/bin
 mkdir -p ~/.local/lib/ai-cli/functions
 
 # Copy files to their locations
-cp command_generator.py ~/.local/lib/ai-cli/
+cp command_generator.py context_analyzer.py ~/.local/lib/ai-cli/
 cp requirements.txt ~/.local/lib/ai-cli/
 cp .env ~/.local/lib/ai-cli/ 2>/dev/null || true
 
@@ -28,10 +28,13 @@ if [ $# -eq 0 ]; then
     return 1
 fi
 
-# Generate the command
+# Store current directory to restore it later
+CURRENT_DIR="$PWD"
+
+# Generate the command (passing current directory as argument)
 cd "$AI_DIR"  # Change to AI directory to ensure .env is found
-generated_cmd=$("$AI_DIR/venv/bin/python" "$AI_DIR/command_generator.py" "$@")
-cd - > /dev/null  # Return to previous directory
+generated_cmd=$("$AI_DIR/venv/bin/python" "$AI_DIR/command_generator.py" --dir "$CURRENT_DIR" "$@")
+cd "$CURRENT_DIR"  # Return to original directory
 
 if [ $? -ne 0 ]; then
     return 1
@@ -54,10 +57,13 @@ function ai {
         return 1
     fi
     
-    # Generate the command
+    # Store current directory to restore it later
+    CURRENT_DIR="$PWD"
+    
+    # Generate the command (passing current directory as argument)
     cd "$AI_DIR"  # Change to AI directory to ensure .env is found
-    generated_cmd=$("$AI_DIR/venv/bin/python" "$AI_DIR/command_generator.py" "$@")
-    cd - > /dev/null  # Return to previous directory
+    generated_cmd=$("$AI_DIR/venv/bin/python" "$AI_DIR/command_generator.py" --dir "$CURRENT_DIR" "$@")
+    cd "$CURRENT_DIR"  # Return to original directory
     
     if [ $? -ne 0 ]; then
         return 1
@@ -85,11 +91,14 @@ done
 
 # Add new configuration
 if [ -f ~/.zshrc ]; then
-    echo $'\n# AI CLI\nfpath=(~/.local/lib/ai-cli/functions $fpath)\nautoload -Uz ai' >> ~/.zshrc
+    echo "# AI CLI" >> ~/.zshrc
+    echo "fpath=(~/.local/lib/ai-cli/functions \$fpath)" >> ~/.zshrc
+    echo "autoload -Uz ai" >> ~/.zshrc
 fi
 
 if [ -f ~/.bashrc ]; then
-    echo $'\n# AI CLI\nsource ~/.local/lib/ai-cli/ai.bash' >> ~/.bashrc
+    echo "# AI CLI" >> ~/.bashrc
+    echo "source ~/.local/lib/ai-cli/ai.bash" >> ~/.bashrc
 fi
 
 # Make the Zsh function file executable

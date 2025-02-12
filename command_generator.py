@@ -2,9 +2,11 @@
 
 import os
 import sys
+import argparse
 from groq import Groq
 from dotenv import load_dotenv
 from pathlib import Path
+from context_analyzer import ContextAnalyzer
 
 def load_environment():
     """Load environment variables from .env files"""
@@ -48,18 +50,28 @@ def create_groq_client():
         raise ValueError("GROQ_API_KEY not found in environment variables")
     return Groq(api_key=api_key)
 
-def generate_command(prompt: str) -> str:
+def generate_command(prompt: str, directory: str = ".") -> str:
     """Generate a terminal command from natural language using Groq"""
     client = create_groq_client()
     
-    system_prompt = """You are a command line interface that converts natural language into terminal commands.
+    # Get context information from the specified directory
+    analyzer = ContextAnalyzer(directory)
+    context = analyzer.get_compact_context()
+    
+    system_prompt = f"""You are a command line interface that converts natural language into terminal commands.
+    Current Context: {context}
+
     Rules:
     1. Output ONLY the command itself - no explanations, no markdown, no backticks
     2. The command should be a single line that can be directly executed in a terminal
     3. Do not include any formatting or explanatory text
     4. Do not wrap the command in quotes or code blocks
     5. Do not include any newlines in the output
-    6. For git commands, assume the repository is already initialized and remote is set up
+    6. Consider the current context when generating commands:
+       - Use project-specific commands when appropriate (npm, pip, etc.)
+       - Consider Git status for Git commands
+       - Use appropriate paths and environment variables
+
     Example input: "list all files"
     Example output: ls -la"""
     
@@ -78,15 +90,16 @@ def generate_command(prompt: str) -> str:
         return None
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: command_generator.py 'your natural language command description'", file=sys.stderr)
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description='Generate terminal commands from natural language')
+    parser.add_argument('prompt', nargs='+', help='The natural language command description')
+    parser.add_argument('--dir', default=".", help='The directory to analyze for context')
+    args = parser.parse_args()
     
     if not load_environment():
         print("⚠️  No .env files found. Looking for environment variables...", file=sys.stderr)
     
-    prompt = " ".join(sys.argv[1:])
-    command = generate_command(prompt)
+    prompt = " ".join(args.prompt)
+    command = generate_command(prompt, args.dir)
     
     if command:
         print(command)
